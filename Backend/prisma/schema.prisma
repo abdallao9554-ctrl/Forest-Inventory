@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      String   @default("VIEWER")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Compartment {
+  id               String   @id @default(uuid())
+  name             String
+  forestName       String
+  areaHa           Float
+  protectionStatus String   // PROTECTED, COMMERCIAL, BUFFER_ZONE
+  dominantSpecies  String
+  geoJson          String?    // GeoJSON String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  plots            Plot[]
+}
+
+model Plot {
+  id            String      @id @default(uuid())
+  compartmentId String
+  compartment   Compartment @relation(fields: [compartmentId], references: [id])
+  plotNumber    String
+  surveyDate    DateTime
+  radius        Float
+  geoJson       String?       // Point GeoJSON
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  trees         Tree[]
+}
+
+model Tree {
+  id          String   @id @default(uuid())
+  plotId      String
+  plot        Plot     @relation(fields: [plotId], references: [id])
+  speciesCode String
+  dbh         Float
+  height      Float
+  volume      Float
+  status      String   // ALIVE, DEAD, HARVESTED
+  geoJson     String?    // Point GeoJSON
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Permit {
+  id           String   @id @default(uuid())
+  permitNumber String   @unique
+  applicant    String
+  areaHa       Float
+  treeCount    Int
+  status       String   // APPROVED, PENDING, REJECTED, EXPIRED
+  issueDate    DateTime?
+  expiryDate   DateTime?
+  treeIds      String?  // Comma separated list of tree IDs
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
